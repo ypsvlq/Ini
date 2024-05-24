@@ -1,5 +1,4 @@
 bytes: []const u8,
-section: []const u8 = "",
 line: usize = 0,
 
 const std = @import("std");
@@ -32,8 +31,10 @@ pub fn next(self: *Ini) ParseError!?Entry {
         if (std.mem.indexOfNone(u8, bytes[end + 1 .. newline], whitespace)) |_| {
             return error.ExpectedNewline;
         }
-        self.section = std.mem.trim(u8, bytes[1..end], whitespace);
-        return self.next();
+        return .{
+            .key = std.mem.trim(u8, bytes[1..end], whitespace),
+            .value = null,
+        };
     }
 
     if (std.mem.indexOfScalar(u8, bytes[0..newline], '=')) |equals| {
@@ -48,7 +49,7 @@ pub fn next(self: *Ini) ParseError!?Entry {
 
 pub const Entry = struct {
     key: []const u8,
-    value: []const u8,
+    value: ?[]const u8,
 
     pub const UnpackOptions = struct {
         blacklist: []const []const u8 = &.{},
@@ -82,7 +83,7 @@ pub const Entry = struct {
             }
 
             if (std.mem.eql(u8, field.name, self.key)) {
-                return set(allocator, FieldType, ptr, self.value);
+                return set(allocator, FieldType, ptr, self.value.?);
             }
         }
 
