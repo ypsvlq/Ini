@@ -57,7 +57,7 @@ pub const Entry = struct {
     };
 
     pub fn unpack(self: Entry, allocator: ?std.mem.Allocator, comptime T: type, dest: anytype, comptime options: UnpackOptions) !void {
-        const info = @typeInfo(T).Struct;
+        const info = @typeInfo(T).@"struct";
         const fields = if (@TypeOf(dest) == *T) info.fields else info.decls;
 
         inline for (fields) |field| blk: {
@@ -66,7 +66,7 @@ pub const Entry = struct {
 
             comptime {
                 switch (@typeInfo(FieldType)) {
-                    .Fn, .Type => break :blk,
+                    .@"fn", .type => break :blk,
                     else => {},
                 }
 
@@ -98,11 +98,11 @@ pub const Entry = struct {
         }
 
         switch (@typeInfo(T)) {
-            .Int => ptr.* = try std.fmt.parseInt(T, value, 10),
-            .Float => ptr.* = try std.fmt.parseFloat(T, value),
-            .Bool => ptr.* = if (std.mem.eql(u8, value, "true")) true else if (std.mem.eql(u8, value, "false")) false else return error.InvalidBool,
-            .Optional => return set(allocator, std.meta.Child(T), ptr, value),
-            .Array => {
+            .int => ptr.* = try std.fmt.parseInt(T, value, 10),
+            .float => ptr.* = try std.fmt.parseFloat(T, value),
+            .bool => ptr.* = if (std.mem.eql(u8, value, "true")) true else if (std.mem.eql(u8, value, "false")) false else return error.InvalidBool,
+            .optional => return set(allocator, std.meta.Child(T), ptr, value),
+            .array => {
                 var iter = std.mem.tokenizeScalar(u8, value, ' ');
                 for (ptr) |*elem_ptr| {
                     const elem = iter.next() orelse return error.NotEnoughElements;
